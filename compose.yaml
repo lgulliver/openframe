@@ -1,0 +1,54 @@
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-1.15.10}
+        EXTRA_APT_PACKAGES: ${EXTRA_APT_PACKAGES:-}
+        APT_PACKAGES_FILE: ${APT_PACKAGES_FILE:-docker/apt-packages.txt}
+        DOTNET_SDK_VERSION: ${DOTNET_SDK_VERSION:-10.0.300}
+        GO_VERSION: ${GO_VERSION:-1.26.3}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.14.5}
+        NODE_VERSION: ${NODE_VERSION:-24.16.0}
+        NVM_VERSION: ${NVM_VERSION:-0.40.3}
+        KUBECTL_VERSION: ${KUBECTL_VERSION:-}
+        HELM_VERSION: ${HELM_VERSION:-v4.1.4}
+    image: ${REMOTE_IMAGE_NAME:-openframe:1.15.10}
+    container_name: openframe
+    working_dir: /workspace
+    env_file:
+      - .env
+    environment:
+      BROWSER: /bin/true
+      HOME: /workspace/.data/home
+      REPOS_ROOT: /repos
+      OPENCODE_CONFIG: /workspace/opencode.json
+      OPENCODE_PORT: ${OPENCODE_PORT:-4096}
+      OPENCODE_HOSTNAME: ${OPENCODE_HOSTNAME:-0.0.0.0}
+      OPENCODE_SERVER_USERNAME: ${OPENCODE_SERVER_USERNAME:-opencode}
+      OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD:-}
+      INSTANCE_HOST: ${INSTANCE_HOST:-0.0.0.0}
+      INSTANCE_PORT_START: ${INSTANCE_PORT_START:-4300}
+      INSTANCE_PORT_END: ${INSTANCE_PORT_END:-4399}
+      INSTANCE_IDLE_TIMEOUT_SECONDS: ${INSTANCE_IDLE_TIMEOUT_SECONDS:-1800}
+      OPENCODE_MDNS: ${OPENCODE_MDNS:-false}
+      OPENCODE_MDNS_DOMAIN: ${OPENCODE_MDNS_DOMAIN:-}
+      OPENCODE_CORS: ${OPENCODE_CORS:-}
+      GIT_USER_NAME: ${GIT_USER_NAME:-}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL:-}
+      GIT_DEFAULT_BRANCH: ${GIT_DEFAULT_BRANCH:-main}
+      GIT_CORE_EDITOR: ${GIT_CORE_EDITOR:-}
+      GIT_AUTH_USERNAME: ${GIT_AUTH_USERNAME:-}
+      GIT_AUTH_PASSWORD: ${GIT_AUTH_PASSWORD:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    entrypoint:
+      - /bin/sh
+      - /workspace/docker/entrypoint.sh
+    ports:
+      - "${OPENCODE_PORT:-4096}:${OPENCODE_PORT:-4096}"
+      - "${INSTANCE_PORT_START:-4300}-${INSTANCE_PORT_END:-4399}:${INSTANCE_PORT_START:-4300}-${INSTANCE_PORT_END:-4399}"
+    volumes:
+      - ./:/workspace
+      - ${REPOS_PATH:-../}:/repos
+    restart: unless-stopped

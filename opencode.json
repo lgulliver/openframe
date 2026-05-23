@@ -1,0 +1,24 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
+    "glob": "allow",
+    "grep": "allow",
+    "bash": "ask",
+    "edit": "ask",
+    "task": "ask",
+    "skill": "ask",
+    "lsp": "allow",
+    "webfetch": "ask",
+    "websearch": "ask",
+    "question": "allow",
+    "external_directory": "deny",
+    "doom_loop": "ask"
+  }
+}
