@@ -4,7 +4,7 @@ Run a multi-repo OpenCode remote environment in Docker.
 
 ## What this does
 
-- Builds a Debian-based remote workstation image and installs a pinned OpenCode version into it.
+- Builds a Debian-based remote workstation image on top of a pinned official Python slim runtime and installs a pinned OpenCode version into it.
 - Publishes an Alpine-based variant for lighter deployments.
 - Mounts a host repo root into the container as `/repos`.
 - Starts a control-plane dashboard on port `4096`.
@@ -132,7 +132,7 @@ Key settings:
 - `REMOTE_IMAGE_NAME`
   The image Compose runs by default. The example points at the published Debian GHCR image, but you can override it with a local tag or the Alpine variant tag.
 - `DOTNET_SDK_VERSION`, `GO_VERSION`, `PYTHON_VERSION`, `NODE_VERSION`, `NVM_VERSION`, `KUBECTL_VERSION`, `HELM_VERSION`, `TERRAFORM_VERSION`, `BUN_VERSION`
-  Build-time versions for the non-apt SDK and CLI toolchain.
+  Build-time versions for the pinned runtime, SDK, and CLI toolchain. `PYTHON_VERSION` selects the official `python:<version>-slim-bookworm` base image for the main workstation image.
 - `OPENCODE_PORT`
   Port for the control-plane dashboard.
 - `INSTANCE_PORT_START` and `INSTANCE_PORT_END`
@@ -195,7 +195,7 @@ The image now also includes build-time installers under [docker/install.d](docke
 - `Helm v4.1.4`
 - `Terraform 1.15.4`
 - latest AWS CLI v2 from the official installer
-- `Python 3.14.5` built from official source
+- `Python 3.14.5` from the official slim runtime image
 - `nvm 0.40.3` with `Node 24.16.0 LTS`
 - `Bun 1.3.14`
 

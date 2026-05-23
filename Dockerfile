@@ -1,4 +1,6 @@
-FROM debian:bookworm-slim
+ARG PYTHON_VERSION=3.14.5
+
+FROM python:${PYTHON_VERSION}-slim-bookworm
 
 SHELL ["/bin/bash", "-lc"]
 
@@ -7,7 +9,7 @@ ARG EXTRA_APT_PACKAGES=""
 ARG APT_PACKAGES_FILE=docker/apt-packages.txt
 ARG DOTNET_SDK_VERSION=10.0.300
 ARG GO_VERSION=1.26.3
-ARG PYTHON_VERSION=3.14.5
+ARG PYTHON_VERSION
 ARG NODE_VERSION=24.16.0
 ARG NVM_VERSION=0.40.3
 ARG KUBECTL_VERSION=v1.36.0
@@ -27,8 +29,6 @@ RUN apt-get update \
     npm \
     openssh-client \
     procps \
-    python3 \
-    python3-pip \
     ripgrep \
     wget \
     xz-utils \
@@ -44,7 +44,6 @@ RUN chmod +x /tmp/install-tools.sh \
   && find /tmp/install.d -type f -name '*.sh' -exec chmod +x {} + \
   && DOTNET_SDK_VERSION="${DOTNET_SDK_VERSION}" \
      GO_VERSION="${GO_VERSION}" \
-     PYTHON_VERSION="${PYTHON_VERSION}" \
      NODE_VERSION="${NODE_VERSION}" \
      NVM_VERSION="${NVM_VERSION}" \
      KUBECTL_VERSION="${KUBECTL_VERSION}" \
@@ -61,4 +60,4 @@ ENV DOTNET_ROOT=/usr/share/dotnet
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV NVM_DIR=/usr/local/nvm
-ENV PATH=/usr/local/cargo/bin:/usr/share/dotnet:/usr/local/go/bin:/opt/python/${PYTHON_VERSION}/bin:/usr/local/bun/bin:${PATH}
+ENV PATH=/usr/local/cargo/bin:/usr/share/dotnet:/usr/local/go/bin:/usr/local/bun/bin:${PATH}
