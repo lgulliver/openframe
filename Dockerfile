@@ -10,8 +10,10 @@ ARG GO_VERSION=1.26.3
 ARG PYTHON_VERSION=3.14.5
 ARG NODE_VERSION=24.16.0
 ARG NVM_VERSION=0.40.3
-ARG KUBECTL_VERSION=
+ARG KUBECTL_VERSION=v1.36.0
 ARG HELM_VERSION=v4.1.4
+ARG TERRAFORM_VERSION=1.15.4
+ARG BUN_VERSION=1.3.14
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -47,6 +49,8 @@ RUN chmod +x /tmp/install-tools.sh \
      NVM_VERSION="${NVM_VERSION}" \
      KUBECTL_VERSION="${KUBECTL_VERSION}" \
      HELM_VERSION="${HELM_VERSION}" \
+     TERRAFORM_VERSION="${TERRAFORM_VERSION}" \
+     BUN_VERSION="${BUN_VERSION}" \
      sh -c 'for script in /tmp/install.d/*.sh; do "$script"; done' \
   && rm -rf /tmp/install.d /tmp/install-tools.sh /tmp/apt-packages.txt
 

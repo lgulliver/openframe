@@ -11,26 +11,41 @@ Run a multi-repo OpenCode remote environment in Docker.
 - Lets you clone existing repos or create new ones directly from the dashboard.
 - Tracks running instances, recent session counts, and last activity.
 - Shuts idle repo instances down automatically after a configurable timeout.
-- Includes a baseline toolchain for remote coding: `git`, `gh`, `ripgrep`, `fd`, `jq`, `curl`, `wget`, `bash`, `zsh`, `make`, `python3`, `pip`, `nodejs`, `npm`, `openssh-client`.
+- Includes a baseline toolchain for remote coding: `git`, `gh`, `ripgrep`, `fd`, `jq`, `curl`, `wget`, `bash`, `zsh`, `make`, `python3`, `pip`, `nodejs`, `npm`, `openssh-client`, `terraform`.
 - Supports build-time package manifests and startup hooks for provisioning extra SDKs and tools.
 - Applies optional global git config at container startup.
-- Ships a broader non-apt toolchain: .NET 10, Go 1.26, Rust, Azure CLI, kubectl, Helm, AWS CLI, Python 3.14, Node 24 via nvm, and Bun.
+- Ships a broader non-apt toolchain: .NET 10, Go 1.26, Rust, Azure CLI, kubectl 1.36.0, Helm 4.1.4, Terraform 1.15.4, AWS CLI, Python 3.14, Node 24 via nvm, and Bun 1.3.14.
 
 ## Quick start
 
-1. Copy the example env file.
-2. Set `REPOS_PATH` to the host directory that contains the repos you want to expose.
-3. Set `OPENCODE_SERVER_PASSWORD` and at least one provider API key.
-4. Build and start the container.
+Use the published image from GHCR by default.
 
 ```bash
 cp .env.example .env
+docker compose pull
 docker compose up
 ```
 
-Open `http://localhost:4096`.
+Then:
+
+1. Set `REPOS_PATH` in `.env` to the host directory that contains the repos you want to expose.
+2. Set `OPENCODE_SERVER_PASSWORD`.
+3. Set at least one provider API key, or add it later from the dashboard UI.
+4. Open `http://localhost:4096`.
 
 The dashboard is protected with HTTP basic auth. Username defaults to `opencode`.
+
+## Local build
+
+If you want to modify the workstation image locally instead of pulling GHCR:
+
+```bash
+cp .env.example .env
+docker compose build
+docker compose up
+```
+
+You can also point `REMOTE_IMAGE_NAME` at a local tag before running `docker compose up`.
 
 ## How it works
 
@@ -52,7 +67,7 @@ Main settings live in `.env`.
 
 ```env
 OPENCODE_VERSION=1.15.10
-REMOTE_IMAGE_NAME=openframe:1.15.10
+REMOTE_IMAGE_NAME=ghcr.io/lgulliver/openframe:1.15.10
 REPOS_PATH=../
 APT_PACKAGES_FILE=docker/apt-packages.txt
 EXTRA_APT_PACKAGES=
@@ -61,8 +76,10 @@ GO_VERSION=1.26.3
 PYTHON_VERSION=3.14.5
 NODE_VERSION=24.16.0
 NVM_VERSION=0.40.3
-KUBECTL_VERSION=
+KUBECTL_VERSION=v1.36.0
 HELM_VERSION=v4.1.4
+TERRAFORM_VERSION=1.15.4
+BUN_VERSION=1.3.14
 OPENCODE_PORT=4096
 OPENCODE_HOSTNAME=0.0.0.0
 INSTANCE_HOST=0.0.0.0
@@ -90,8 +107,10 @@ Key settings:
   Points to the host directory containing the repos you want to expose. In your current layout, `../` mounts `/Users/lgulliver/repos` into the container as `/repos`.
 - `OPENCODE_VERSION`
   The exact OpenCode version installed into the Debian runtime at build time.
-- `DOTNET_SDK_VERSION`, `GO_VERSION`, `PYTHON_VERSION`, `NODE_VERSION`, `NVM_VERSION`, `KUBECTL_VERSION`, `HELM_VERSION`
-  Build-time versions for the non-apt SDK and CLI toolchain. Leaving `KUBECTL_VERSION` empty uses Kubernetes' current stable release at build time.
+- `REMOTE_IMAGE_NAME`
+  The image Compose runs by default. The example points at the published GHCR image, but you can override it with a local tag.
+- `DOTNET_SDK_VERSION`, `GO_VERSION`, `PYTHON_VERSION`, `NODE_VERSION`, `NVM_VERSION`, `KUBECTL_VERSION`, `HELM_VERSION`, `TERRAFORM_VERSION`, `BUN_VERSION`
+  Build-time versions for the non-apt SDK and CLI toolchain.
 - `OPENCODE_PORT`
   Port for the control-plane dashboard.
 - `INSTANCE_PORT_START` and `INSTANCE_PORT_END`
@@ -150,12 +169,13 @@ The image now also includes build-time installers under [docker/install.d](docke
 - `Go 1.26.3`
 - latest stable Rust via `rustup`
 - Azure CLI from Microsoft's Debian repo
-- `kubectl` from Kubernetes official binaries
+- `kubectl v1.36.0`
 - `Helm v4.1.4`
+- `Terraform 1.15.4`
 - latest AWS CLI v2 from the official installer
 - `Python 3.14.5` built from official source
 - `nvm 0.40.3` with `Node 24.16.0 LTS`
-- latest Bun via the official installer
+- `Bun 1.3.14`
 
 Git config is applied from env on container startup:
 

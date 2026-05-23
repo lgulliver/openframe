@@ -12,9 +12,11 @@ services:
         PYTHON_VERSION: ${PYTHON_VERSION:-3.14.5}
         NODE_VERSION: ${NODE_VERSION:-24.16.0}
         NVM_VERSION: ${NVM_VERSION:-0.40.3}
-        KUBECTL_VERSION: ${KUBECTL_VERSION:-}
+        KUBECTL_VERSION: ${KUBECTL_VERSION:-v1.36.0}
         HELM_VERSION: ${HELM_VERSION:-v4.1.4}
-    image: ${REMOTE_IMAGE_NAME:-openframe:1.15.10}
+        TERRAFORM_VERSION: ${TERRAFORM_VERSION:-1.15.4}
+        BUN_VERSION: ${BUN_VERSION:-1.3.14}
+    image: ${REMOTE_IMAGE_NAME:-ghcr.io/lgulliver/openframe:1.15.10}
     container_name: openframe
     working_dir: /workspace
     env_file:

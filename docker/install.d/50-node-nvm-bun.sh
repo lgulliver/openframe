@@ -4,6 +4,7 @@ set -eu
 
 NODE_VERSION="${NODE_VERSION:-24.16.0}"
 NVM_VERSION="${NVM_VERSION:-0.40.3}"
+BUN_VERSION="${BUN_VERSION:-1.3.14}"
 export NVM_DIR=/usr/local/nvm
 
 mkdir -p "${NVM_DIR}"
@@ -22,7 +23,7 @@ if [ -f "${NVM_DIR}/versions/node/v${NODE_VERSION}/bin/corepack" ]; then
 fi
 
 curl -fsSL https://bun.sh/install -o /tmp/install-bun.sh
-BUN_INSTALL=/usr/local/bun sh /tmp/install-bun.sh
+BUN_INSTALL=/usr/local/bun sh /tmp/install-bun.sh "bun-v${BUN_VERSION}"
 ln -sf /usr/local/bun/bin/bun /usr/local/bin/bun
 
 cat >/etc/profile.d/nvm.sh <<'EOF'

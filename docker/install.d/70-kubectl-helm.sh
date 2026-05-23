@@ -12,7 +12,7 @@ case "${ARCH}" in
     ;;
 esac
 
-KUBECTL_VERSION="${KUBECTL_VERSION:-$(curl -L -s https://dl.k8s.io/release/stable.txt)}"
+KUBECTL_VERSION="${KUBECTL_VERSION:-v1.36.0}"
 curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${BIN_ARCH}/kubectl" -o /usr/local/bin/kubectl
 chmod +x /usr/local/bin/kubectl
 
