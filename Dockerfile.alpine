@@ -1,0 +1,31 @@
+FROM alpine:3.22
+
+SHELL ["/bin/sh", "-lc"]
+
+ARG OPENCODE_VERSION=1.15.10
+ARG EXTRA_APK_PACKAGES=""
+
+RUN apk add --no-cache \
+    bash \
+    ca-certificates \
+    curl \
+    fd \
+    git \
+    jq \
+    make \
+    nodejs \
+    npm \
+    openssh-client \
+    procps \
+    python3 \
+    py3-pip \
+    ripgrep \
+    wget \
+    xz \
+    zsh \
+    ${EXTRA_APK_PACKAGES}
+
+RUN curl -fsSL https://opencode.ai/install | bash -s -- --version "${OPENCODE_VERSION}" --no-modify-path \
+  && ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode
+
+ENV PATH=/root/.opencode/bin:${PATH}

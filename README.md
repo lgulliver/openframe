@@ -5,6 +5,7 @@ Run a multi-repo OpenCode remote environment in Docker.
 ## What this does
 
 - Builds a Debian-based remote workstation image and installs a pinned OpenCode version into it.
+- Publishes an Alpine-based variant for lighter deployments.
 - Mounts a host repo root into the container as `/repos`.
 - Starts a control-plane dashboard on port `4096`.
 - Launches one repo-scoped `opencode web` instance per repo, on demand.
@@ -34,6 +35,23 @@ Then:
 4. Open `http://localhost:4096`.
 
 The dashboard is protected with HTTP basic auth. Username defaults to `opencode`.
+
+## Image variants
+
+Openframe publishes two image families:
+
+- `ghcr.io/lgulliver/openframe:<version>`
+  Full Debian/glibc workstation image. This is the default and the recommended choice.
+- `ghcr.io/lgulliver/openframe:<version>-alpine`
+  Lighter Alpine image with the control plane and baseline CLI tooling.
+
+Use the Alpine tag by overriding `REMOTE_IMAGE_NAME` in `.env`.
+
+The Alpine image is intentionally narrower:
+
+- it includes the manager, OpenCode, and baseline CLI tools
+- it does not include the full pinned SDK workstation stack from the Debian image
+- browser terminal behavior on musl-based runtimes is not the primary supported path
 
 ## Local build
 
@@ -108,7 +126,7 @@ Key settings:
 - `OPENCODE_VERSION`
   The exact OpenCode version installed into the Debian runtime at build time.
 - `REMOTE_IMAGE_NAME`
-  The image Compose runs by default. The example points at the published GHCR image, but you can override it with a local tag.
+  The image Compose runs by default. The example points at the published Debian GHCR image, but you can override it with a local tag or the Alpine variant tag.
 - `DOTNET_SDK_VERSION`, `GO_VERSION`, `PYTHON_VERSION`, `NODE_VERSION`, `NVM_VERSION`, `KUBECTL_VERSION`, `HELM_VERSION`, `TERRAFORM_VERSION`, `BUN_VERSION`
   Build-time versions for the non-apt SDK and CLI toolchain.
 - `OPENCODE_PORT`
@@ -177,6 +195,8 @@ The image now also includes build-time installers under [docker/install.d](docke
 - `nvm 0.40.3` with `Node 24.16.0 LTS`
 - `Bun 1.3.14`
 
+The Alpine image is a separate published variant built from [Dockerfile.alpine](Dockerfile.alpine). It includes the control plane, OpenCode, and the baseline CLI stack, but not the full Debian SDK/toolchain layer.
+
 Git config is applied from env on container startup:
 
 - `GIT_USER_NAME`
@@ -239,4 +259,5 @@ The included [Makefile](Makefile) wraps the common commands.
 - API keys and extra OpenCode config from the UI are also persisted locally under `.data/manager-settings.json`. The manager materializes a generated OpenCode config for child instances and injects the configured runtime env vars when those instances start.
 - Repo discovery is currently shallow: it lists first-level directories under `/repos`.
 - Browser terminal support depends on PTY support in the container runtime. This repo now uses a glibc-based Debian runtime because the musl-based path did not satisfy OpenCode's PTY library.
+- The Alpine image exists for lighter deployments, but the Debian/glibc image remains the primary fully provisioned workstation target.
 - I validated the compose configuration, but I have not yet runtime-tested a full multi-instance launch sequence in Docker.
