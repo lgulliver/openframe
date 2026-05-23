@@ -1,0 +1,7 @@
+# One package per line.
+# This file is copied into the image at build time.
+#
+# Examples:
+# gh
+# shellcheck
+# direnv
