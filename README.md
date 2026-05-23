@@ -36,6 +36,8 @@ Then:
 
 The dashboard is protected with HTTP basic auth. Username defaults to `opencode`.
 
+Published images currently target `linux/amd64` only.
+
 ## Image variants
 
 Openframe publishes two image families:
@@ -44,6 +46,8 @@ Openframe publishes two image families:
   Full Debian/glibc workstation image. This is the default and the recommended choice.
 - `ghcr.io/lgulliver/openframe:<version>-alpine`
   Lighter Alpine image with the control plane and baseline CLI tooling.
+
+Both published image families are currently `linux/amd64` only.
 
 Use the Alpine tag by overriding `REMOTE_IMAGE_NAME` in `.env`.
 
