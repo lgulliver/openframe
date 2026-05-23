@@ -12,7 +12,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^Dockerfile$"
+        "^Dockerfile$",
+        "^Dockerfile\\.alpine$"
       ],
       "matchStrings": [
         "ARG OPENCODE_VERSION=(?<currentValue>[^\\s]+)"
@@ -50,7 +51,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^Dockerfile$"
+        "^Dockerfile$",
+        "^Dockerfile\\.alpine$"
       ],
       "matchStrings": [
         "ARG PYTHON_VERSION=(?<currentValue>[^\\s]+)"

@@ -1,8 +1,11 @@
-FROM alpine:3.22
+ARG PYTHON_VERSION=3.14.5
+
+FROM python:${PYTHON_VERSION}-alpine3.22
 
 SHELL ["/bin/sh", "-lc"]
 
 ARG OPENCODE_VERSION=1.15.10
+ARG PYTHON_VERSION
 ARG EXTRA_APK_PACKAGES=""
 
 RUN apk add --no-cache \
@@ -17,8 +20,6 @@ RUN apk add --no-cache \
     npm \
     openssh-client \
     procps \
-    python3 \
-    py3-pip \
     ripgrep \
     wget \
     xz \

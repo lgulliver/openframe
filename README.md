@@ -45,7 +45,7 @@ Openframe publishes two image families:
 - `ghcr.io/lgulliver/openframe:<version>`
   Full Debian/glibc workstation image. This is the default and the recommended choice.
 - `ghcr.io/lgulliver/openframe:<version>-alpine`
-  Lighter Alpine image with the control plane and baseline CLI tooling.
+  Lighter Alpine image with the control plane, the official pinned Python Alpine runtime, and baseline CLI tooling.
 
 Both published image families are currently `linux/amd64` only.
 
@@ -199,7 +199,7 @@ The image now also includes build-time installers under [docker/install.d](docke
 - `nvm 0.40.3` with `Node 24.16.0 LTS`
 - `Bun 1.3.14`
 
-The Alpine image is a separate published variant built from [Dockerfile.alpine](Dockerfile.alpine). It includes the control plane, OpenCode, and the baseline CLI stack, but not the full Debian SDK/toolchain layer.
+The Alpine image is a separate published variant built from [Dockerfile.alpine](Dockerfile.alpine). It uses the official pinned Python Alpine runtime, and includes the control plane, OpenCode, and the baseline CLI stack, but not the full Debian SDK/toolchain layer.
 
 Git config is applied from env on container startup:
 
