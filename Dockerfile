@@ -10,6 +10,7 @@ ARG APT_PACKAGES_FILE=docker/apt-packages.txt
 ARG DOTNET_SDK_VERSION=10.0.300
 ARG GO_VERSION=1.26.3
 ARG PYTHON_VERSION
+ARG UV_VERSION=0.8.5
 ARG NODE_VERSION=24.16.0
 ARG NVM_VERSION=0.40.3
 ARG KUBECTL_VERSION=v1.36.0
@@ -44,6 +45,7 @@ RUN chmod +x /tmp/install-tools.sh \
   && find /tmp/install.d -type f -name '*.sh' -exec chmod +x {} + \
   && DOTNET_SDK_VERSION="${DOTNET_SDK_VERSION}" \
      GO_VERSION="${GO_VERSION}" \
+     UV_VERSION="${UV_VERSION}" \
      NODE_VERSION="${NODE_VERSION}" \
      NVM_VERSION="${NVM_VERSION}" \
      KUBECTL_VERSION="${KUBECTL_VERSION}" \

@@ -12,10 +12,10 @@ Run a multi-repo OpenCode remote environment in Docker.
 - Tracks running instances, recent session counts, and last activity.
 - Shuts idle repo instances down automatically after a configurable timeout.
 - Bakes the application into the image so deployments only need persistent state and repo mounts.
-- Includes a baseline toolchain for remote coding: `git`, `gh`, `ripgrep`, `fd`, `jq`, `curl`, `wget`, `bash`, `zsh`, `make`, `python3`, `pip`, `nodejs`, `npm`, `openssh-client`, `terraform`.
+- Includes a baseline toolchain for remote coding: `git`, `gh`, `ripgrep`, `fd`, `jq`, `curl`, `wget`, `bash`, `zsh`, `make`, `python3`, `pip`, `uv`, `nodejs`, `npm`, `openssh-client`, `terraform`.
 - Supports build-time package manifests and startup hooks for provisioning extra SDKs and tools.
 - Applies optional global git config at container startup.
-- Ships a broader non-apt toolchain: .NET 10, Go 1.26, Rust, Azure CLI, kubectl 1.36.0, Helm 4.1.4, Terraform 1.15.4, AWS CLI, Python 3.14, Node 24 via nvm, and Bun 1.3.14.
+- Ships a broader non-apt toolchain: .NET 10, Go 1.26, Rust, Azure CLI, kubectl 1.36.0, Helm 4.1.4, Terraform 1.15.4, AWS CLI, Python 3.14, uv 0.8.5, Node 24 via nvm, and Bun 1.3.14.
 
 ## Quick start
 
@@ -81,6 +81,7 @@ EXTRA_APT_PACKAGES=
 DOTNET_SDK_VERSION=10.0.300
 GO_VERSION=1.26.3
 PYTHON_VERSION=3.14.5
+UV_VERSION=0.8.5
 NODE_VERSION=24.16.0
 NVM_VERSION=0.40.3
 KUBECTL_VERSION=v1.36.0
@@ -116,7 +117,7 @@ Key settings:
   The exact OpenCode version installed into the Debian runtime at build time.
 - `REMOTE_IMAGE_NAME`
   The image Compose runs by default. The example points at the published GHCR image, but you can override it with a local tag.
-- `DOTNET_SDK_VERSION`, `GO_VERSION`, `PYTHON_VERSION`, `NODE_VERSION`, `NVM_VERSION`, `KUBECTL_VERSION`, `HELM_VERSION`, `TERRAFORM_VERSION`, `BUN_VERSION`
+- `DOTNET_SDK_VERSION`, `GO_VERSION`, `PYTHON_VERSION`, `UV_VERSION`, `NODE_VERSION`, `NVM_VERSION`, `KUBECTL_VERSION`, `HELM_VERSION`, `TERRAFORM_VERSION`, `BUN_VERSION`
   Build-time versions for the pinned runtime, SDK, and CLI toolchain. `PYTHON_VERSION` selects the official `python:<version>-slim-bookworm` base image for the main workstation image.
 - `OPENCODE_PORT`
   Port for the control-plane dashboard.
@@ -174,6 +175,7 @@ The image now also includes build-time installers under [docker/install.d](docke
 
 - `.NET SDK 10.0.300`
 - `Go 1.26.3`
+- `uv 0.8.5`
 - latest stable Rust via `rustup`
 - Azure CLI from Microsoft's Debian repo
 - `kubectl v1.36.0`
@@ -244,6 +246,7 @@ The included [Makefile](Makefile) wraps the common commands.
 - The container runs [docker/bootstrap.sh](docker/bootstrap.sh) before starting the manager. That applies git config and any startup hooks.
 - Git settings from the UI are persisted under `/data/manager-settings.json` and applied to future repo instances through a shared git config file.
 - API keys and extra OpenCode config from the UI are also persisted under `/data/manager-settings.json`. The manager materializes a generated OpenCode config for child instances and injects the configured runtime env vars when those instances start.
+- Repo instances now share a single OpenCode auth file at `/data/home/.local/share/opencode/auth.json`, so logging into providers such as GitHub Copilot once persists across repo instances, restarts, and image updates as long as `/data` remains mounted to persistent storage.
 - Repo discovery is currently shallow: it lists first-level directories under `/repos`.
 - Browser terminal support depends on PTY support in the container runtime. This repo now uses a glibc-based Debian runtime because the musl-based path did not satisfy OpenCode's PTY library.
 - Local `docker compose` maps `./.data` to `/data`, while appliance-style deployments such as Unraid can mount any persistent host path at `/data`.

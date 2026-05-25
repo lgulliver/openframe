@@ -26,6 +26,7 @@ from urllib.request import Request, urlopen
 APP_ROOT = Path(os.environ.get("OPENFRAME_APP_ROOT", "/opt/openframe")).resolve()
 REPOS_ROOT = Path(os.environ.get("REPOS_ROOT", "/repos")).resolve()
 DATA_ROOT = Path(os.environ.get("OPENFRAME_DATA_ROOT", "/data")).resolve()
+SHARED_HOME = Path(os.environ.get("HOME", str(DATA_ROOT / "home"))).resolve()
 SETTINGS_PATH = DATA_ROOT / "manager-settings.json"
 SHARED_GITCONFIG_PATH = DATA_ROOT / "gitconfig"
 GENERATED_OPENCODE_CONFIG_PATH = DATA_ROOT / "opencode.generated.json"
@@ -565,7 +566,7 @@ class InstanceManager:
         state_dir = DATA_ROOT / "instances" / slug
         home_dir = state_dir / "home"
         log_path = DATA_ROOT / "logs" / f"{slug}.log"
-        home_dir.mkdir(parents=True, exist_ok=True)
+        self._prepare_instance_home(home_dir)
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
         env = os.environ.copy()
@@ -581,6 +582,7 @@ class InstanceManager:
 
         command = [
             "opencode",
+            str(repo.path),
             "web",
             "--port",
             str(port),
@@ -617,6 +619,23 @@ class InstanceManager:
             state_dir=state_dir,
             log_path=log_path,
         )
+
+    def _prepare_instance_home(self, home_dir: Path) -> None:
+        auth_parent = home_dir / ".local" / "share" / "opencode"
+        auth_parent.mkdir(parents=True, exist_ok=True)
+        (home_dir / ".config" / "opencode").mkdir(parents=True, exist_ok=True)
+
+        shared_auth = SHARED_HOME / ".local" / "share" / "opencode" / "auth.json"
+        shared_auth.parent.mkdir(parents=True, exist_ok=True)
+        instance_auth = auth_parent / "auth.json"
+
+        if instance_auth.is_symlink():
+            return
+        if instance_auth.exists() and not shared_auth.exists():
+            shutil.copy2(instance_auth, shared_auth)
+        if instance_auth.exists() or instance_auth.is_symlink():
+            instance_auth.unlink()
+        instance_auth.symlink_to(shared_auth)
 
     def _wait_until_ready(self, instance: InstanceRecord) -> None:
         deadline = time.time() + 20
