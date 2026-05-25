@@ -83,6 +83,10 @@ def host_without_port(host: str) -> str:
     return value
 
 
+def shell_quote(value: str) -> str:
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
 def json_response(handler: BaseHTTPRequestHandler, status: int, payload: Any) -> None:
     body = json.dumps(payload, indent=2).encode("utf-8")
     handler.send_response(status)
@@ -372,6 +376,20 @@ class InstanceManager:
             self._instances[slug] = instance
         self._wait_until_ready(instance)
         return instance
+
+    def attach_command(self, slug: str, host: str) -> str:
+        instance = self.ensure_instance(slug)
+        return " ".join(
+            [
+                "opencode",
+                "attach",
+                "--username",
+                shell_quote(USERNAME),
+                "--password",
+                shell_quote(PASSWORD),
+                shell_quote(instance.url(host)),
+            ]
+        )
 
     def stop_instance(self, slug: str, reason: str = "manual") -> bool:
         with self._lock:
@@ -986,9 +1004,9 @@ def dashboard_html(snapshot: dict[str, Any], request_host: str) -> str:
         </div>
       </div>
       <div class="stats">
-        <div class="stat"><strong>{snapshot["totalRepos"]}</strong><span>Visible repos</span></div>
-        <div class="stat"><strong>{snapshot["runningInstances"]}</strong><span>Running instances</span></div>
-        <div class="stat"><strong>{snapshot["idleTimeoutSeconds"] // 60}</strong><span>Idle timeout (minutes)</span></div>
+        <div class="stat"><strong id="total-repos">{snapshot["totalRepos"]}</strong><span>Visible repos</span></div>
+        <div class="stat"><strong id="running-instances">{snapshot["runningInstances"]}</strong><span>Running instances</span></div>
+        <div class="stat"><strong id="idle-timeout">{snapshot["idleTimeoutSeconds"] // 60}</strong><span>Idle timeout (minutes)</span></div>
       </div>
     </section>
     <section class="toolbar">
@@ -1020,6 +1038,9 @@ def dashboard_html(snapshot: dict[str, Any], request_host: str) -> str:
     const grid = document.getElementById("repo-grid");
     const targetMode = {json.dumps(open_target)};
     const statusbar = document.getElementById("statusbar");
+    const totalReposStat = document.getElementById("total-repos");
+    const runningInstancesStat = document.getElementById("running-instances");
+    const idleTimeoutStat = document.getElementById("idle-timeout");
     const modal = document.getElementById("modal");
     const modalForm = document.getElementById("modal-form");
     const modalTitle = document.getElementById("modal-title");
@@ -1134,7 +1155,7 @@ def dashboard_html(snapshot: dict[str, Any], request_host: str) -> str:
         : "";
 
       const attachAction = repo.running
-        ? `<button class="secondary" data-action="attach" data-url="${{repo.url}}">Show Attach Command</button>`
+        ? `<button class="secondary" data-action="attach" data-slug="${{repo.slug}}">Show Attach Command</button>`
         : "";
 
       return `
@@ -1163,8 +1184,31 @@ def dashboard_html(snapshot: dict[str, Any], request_host: str) -> str:
       `;
     }}
 
+    function renderStats(data) {{
+      totalReposStat.textContent = String(data.totalRepos ?? 0);
+      runningInstancesStat.textContent = String(data.runningInstances ?? 0);
+      idleTimeoutStat.textContent = String(Math.round((data.idleTimeoutSeconds ?? 0) / 60));
+    }}
+
     function render(data) {{
+      renderStats(data);
       grid.innerHTML = data.repos.map(repoCard).join("");
+    }}
+
+    function openStartedInstance(url, pendingWindow) {{
+      if (targetMode === "_self") {{
+        window.location.assign(url);
+        return;
+      }}
+      if (pendingWindow && !pendingWindow.closed) {{
+        pendingWindow.location = url;
+        pendingWindow.focus?.();
+        return;
+      }}
+      const opened = window.open(url, targetMode);
+      if (!opened) {{
+        window.location.assign(url);
+      }}
     }}
 
     async function api(path, method = "GET") {{
@@ -1198,12 +1242,14 @@ def dashboard_html(snapshot: dict[str, Any], request_host: str) -> str:
 
       if (action === "start") {{
         const slug = target.dataset.slug;
+        const pendingWindow = targetMode === "_blank" ? window.open("", targetMode) : null;
         target.setAttribute("disabled", "disabled");
         try {{
           const result = await api(`/api/repos/${{slug}}/start`, "POST");
           await refresh();
-          window.open(result.url, targetMode);
+          openStartedInstance(result.url, pendingWindow);
         }} catch (error) {{
+          pendingWindow?.close?.();
           setStatus(error.message, "error");
         }} finally {{
           target.removeAttribute("disabled");
@@ -1224,9 +1270,17 @@ def dashboard_html(snapshot: dict[str, Any], request_host: str) -> str:
       }}
 
       if (action === "attach") {{
-        const url = target.dataset.url;
-        navigator.clipboard?.writeText(`opencode attach ${{url}}`).catch(() => undefined);
-        setStatus(`Attach locally with: opencode attach ${{url}}`, "success");
+        const slug = target.dataset.slug;
+        target.setAttribute("disabled", "disabled");
+        try {{
+          const result = await api(`/api/repos/${{slug}}/attach`, "POST");
+          navigator.clipboard?.writeText(result.command).catch(() => undefined);
+          setStatus(`Attach locally with: ${{result.command}}`, "success");
+        }} catch (error) {{
+          setStatus(error.message, "error");
+        }} finally {{
+          target.removeAttribute("disabled");
+        }}
       }}
     }});
 
@@ -1429,6 +1483,19 @@ class ManagerHandler(BaseHTTPRequestHandler):
                     "startedAt": isoformat(instance.started_at),
                 },
             )
+            return
+        match = re.fullmatch(r"/api/repos/([a-z0-9._-]+)/attach", parsed.path)
+        if match:
+            slug = match.group(1)
+            try:
+                command = INSTANCE_MANAGER.attach_command(slug, self._browser_host())
+            except KeyError:
+                json_response(self, HTTPStatus.NOT_FOUND, {"error": f"Unknown repo: {slug}"})
+                return
+            except Exception as exc:  # noqa: BLE001
+                json_response(self, HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)})
+                return
+            json_response(self, HTTPStatus.OK, {"repo": slug, "command": command})
             return
         match = re.fullmatch(r"/api/repos/([a-z0-9._-]+)/stop", parsed.path)
         if match:
