@@ -11,9 +11,9 @@ mkdir -p \
   "${HOME}" \
   "${HOME}/.config/opencode" \
   "${HOME}/.local/share/opencode" \
-  /workspace/.data/instances \
-  /workspace/.data/logs
+  /data/instances \
+  /data/logs
 
-sh /workspace/docker/bootstrap.sh
+sh /opt/openframe/docker/bootstrap.sh
 
-exec python3 /workspace/manager.py
+exec python3 /opt/openframe/manager.py

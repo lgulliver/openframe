@@ -23,9 +23,9 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 
-WORKSPACE_ROOT = Path("/workspace")
+APP_ROOT = Path(os.environ.get("OPENFRAME_APP_ROOT", "/opt/openframe")).resolve()
 REPOS_ROOT = Path(os.environ.get("REPOS_ROOT", "/repos")).resolve()
-DATA_ROOT = WORKSPACE_ROOT / ".data"
+DATA_ROOT = Path(os.environ.get("OPENFRAME_DATA_ROOT", "/data")).resolve()
 SETTINGS_PATH = DATA_ROOT / "manager-settings.json"
 SHARED_GITCONFIG_PATH = DATA_ROOT / "gitconfig"
 GENERATED_OPENCODE_CONFIG_PATH = DATA_ROOT / "opencode.generated.json"
@@ -37,7 +37,7 @@ INSTANCE_PORT_END = int(os.environ.get("INSTANCE_PORT_END", "4399"))
 IDLE_TIMEOUT_SECONDS = int(os.environ.get("INSTANCE_IDLE_TIMEOUT_SECONDS", "1800"))
 USERNAME = os.environ.get("OPENCODE_SERVER_USERNAME", "opencode")
 PASSWORD = os.environ["OPENCODE_SERVER_PASSWORD"]
-CONFIG_PATH = os.environ.get("OPENCODE_CONFIG", "/workspace/opencode.json")
+CONFIG_PATH = os.environ.get("OPENCODE_CONFIG", str(APP_ROOT / "opencode.json"))
 OPEN_IN_BROWSER = os.environ.get("MANAGER_OPEN_INSTANCES_IN_NEW_TAB", "1")
 
 TOOL_ENV_KEYS = (
@@ -499,7 +499,7 @@ class InstanceManager:
         return env
 
     def _write_git_askpass(self) -> str:
-        askpass_dir = WORKSPACE_ROOT / ".data" / "git"
+        askpass_dir = DATA_ROOT / "git"
         askpass_dir.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -528,9 +528,9 @@ class InstanceManager:
 
     def _start_instance(self, repo: RepoRecord, port: int) -> InstanceRecord:
         slug = repo.slug
-        state_dir = WORKSPACE_ROOT / ".data" / "instances" / slug
+        state_dir = DATA_ROOT / "instances" / slug
         home_dir = state_dir / "home"
-        log_path = WORKSPACE_ROOT / ".data" / "logs" / f"{slug}.log"
+        log_path = DATA_ROOT / "logs" / f"{slug}.log"
         home_dir.mkdir(parents=True, exist_ok=True)
         log_path.parent.mkdir(parents=True, exist_ok=True)
 

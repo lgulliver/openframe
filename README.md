@@ -11,6 +11,7 @@ Run a multi-repo OpenCode remote environment in Docker.
 - Lets you clone existing repos or create new ones directly from the dashboard.
 - Tracks running instances, recent session counts, and last activity.
 - Shuts idle repo instances down automatically after a configurable timeout.
+- Bakes the application into the image so deployments only need persistent state and repo mounts.
 - Includes a baseline toolchain for remote coding: `git`, `gh`, `ripgrep`, `fd`, `jq`, `curl`, `wget`, `bash`, `zsh`, `make`, `python3`, `pip`, `nodejs`, `npm`, `openssh-client`, `terraform`.
 - Supports build-time package manifests and startup hooks for provisioning extra SDKs and tools.
 - Applies optional global git config at container startup.
@@ -49,6 +50,8 @@ docker compose up
 
 You can also point `REMOTE_IMAGE_NAME` at a local tag before running `docker compose up`.
 
+The runtime no longer depends on bind-mounting the source tree into the container. Only state and repos are mounted at runtime.
+
 ## How it works
 
 The top-level container no longer runs one `opencode web` process directly.
@@ -58,7 +61,7 @@ Instead it runs [manager.py](manager.py), which:
 - scans `/repos` for candidate repos
 - shows them in a dashboard
 - starts a dedicated `opencode web` process for a repo when you open it
-- stores that repo instance state under `.data/instances/<repo>/`
+- stores that repo instance state under `/data/instances/<repo>/`
 - stops idle repo instances automatically
 
 Each repo instance gets its own port from the configured instance range. The dashboard links you directly to that repo instance.
@@ -186,9 +189,9 @@ Git config is applied from env on container startup:
 - `GIT_DEFAULT_BRANCH`
 - `GIT_CORE_EDITOR`
 
-If those env vars are not set, use the dashboard `Git Settings` action. The manager persists those values under `.data/manager-settings.json` and writes a shared git config consumed by spawned repo instances.
+If those env vars are not set, use the dashboard `Git Settings` action. The manager persists those values under `/data/manager-settings.json` and writes a shared git config consumed by spawned repo instances.
 
-API keys and additional OpenCode runtime settings can also be managed from the dashboard `API Keys + Config` action. The manager persists them in `.data/manager-settings.json` and applies them to newly spawned repo instances.
+API keys and additional OpenCode runtime settings can also be managed from the dashboard `API Keys + Config` action. The manager persists them in `/data/manager-settings.json` and applies them to newly spawned repo instances.
 
 HTTPS clone auth can also be supplied from env:
 
@@ -204,7 +207,7 @@ Repo processes and OpenCode sessions are separate concerns.
 - Opening a repo starts its OpenCode web backend if it is not already running.
 - Closing your browser does not immediately kill that backend.
 - Idle backends are stopped automatically by the manager.
-- Session data persists on disk under `.data/instances/<repo>/`, so reopening the repo preserves prior OpenCode history and state.
+- Session data persists on disk under `/data/instances/<repo>/`, so reopening the repo preserves prior OpenCode history and state.
 
 ## Permissions
 
@@ -237,9 +240,9 @@ The included [Makefile](Makefile) wraps the common commands.
 - The dashboard runs on `4096` by default, while repo instances use the configured instance port range.
 - The container sets `BROWSER=/bin/true` so spawned OpenCode instances do not try to open a browser in-container.
 - The container runs [docker/bootstrap.sh](docker/bootstrap.sh) before starting the manager. That applies git config and any startup hooks.
-- Git settings from the UI are persisted locally under `.data/manager-settings.json` and applied to future repo instances through a shared git config file.
-- API keys and extra OpenCode config from the UI are also persisted locally under `.data/manager-settings.json`. The manager materializes a generated OpenCode config for child instances and injects the configured runtime env vars when those instances start.
+- Git settings from the UI are persisted under `/data/manager-settings.json` and applied to future repo instances through a shared git config file.
+- API keys and extra OpenCode config from the UI are also persisted under `/data/manager-settings.json`. The manager materializes a generated OpenCode config for child instances and injects the configured runtime env vars when those instances start.
 - Repo discovery is currently shallow: it lists first-level directories under `/repos`.
 - Browser terminal support depends on PTY support in the container runtime. This repo now uses a glibc-based Debian runtime because the musl-based path did not satisfy OpenCode's PTY library.
-- The Alpine image exists for lighter deployments, but the Debian/glibc image remains the primary fully provisioned workstation target.
+- Local `docker compose` maps `./.data` to `/data`, while appliance-style deployments such as Unraid can mount any persistent host path at `/data`.
 - I validated the compose configuration, but I have not yet runtime-tested a full multi-instance launch sequence in Docker.

@@ -56,8 +56,13 @@ RUN chmod +x /tmp/install-tools.sh \
 RUN curl -fsSL https://opencode.ai/install | bash -s -- --version "${OPENCODE_VERSION}" --no-modify-path \
   && ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode
 
+COPY manager.py opencode.json /opt/openframe/
+COPY docker /opt/openframe/docker
+
 ENV DOTNET_ROOT=/usr/share/dotnet
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV NVM_DIR=/usr/local/nvm
+ENV OPENFRAME_APP_ROOT=/opt/openframe
+ENV OPENFRAME_DATA_ROOT=/data
 ENV PATH=/usr/local/cargo/bin:/usr/share/dotnet:/usr/local/go/bin:/usr/local/bun/bin:${PATH}
