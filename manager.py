@@ -67,6 +67,22 @@ def basic_auth_header() -> str:
     return f"Basic {token}"
 
 
+def host_without_port(host: str) -> str:
+    value = host.strip()
+    if not value:
+        return "localhost"
+    if value.startswith("["):
+        end = value.find("]")
+        if end != -1:
+            return value[1:end]
+        return value
+    if value.count(":") == 1:
+        name, port = value.rsplit(":", 1)
+        if port.isdigit():
+            return name
+    return value
+
+
 def json_response(handler: BaseHTTPRequestHandler, status: int, payload: Any) -> None:
     body = json.dumps(payload, indent=2).encode("utf-8")
     handler.send_response(status)
@@ -1325,11 +1341,11 @@ class ManagerHandler(BaseHTTPRequestHandler):
             return
         parsed = urlparse(self.path)
         if parsed.path == "/":
-            snapshot = INSTANCE_MANAGER.snapshot(self.headers.get("Host", f"localhost:{MANAGER_PORT}"))
+            snapshot = INSTANCE_MANAGER.snapshot(self._browser_host())
             text_response(self, HTTPStatus.OK, dashboard_html(snapshot, self.headers.get("Host", f"localhost:{MANAGER_PORT}")), "text/html; charset=utf-8")
             return
         if parsed.path == "/api/status":
-            json_response(self, HTTPStatus.OK, INSTANCE_MANAGER.snapshot(self.headers.get("Host", f"localhost:{MANAGER_PORT}")))
+            json_response(self, HTTPStatus.OK, INSTANCE_MANAGER.snapshot(self._browser_host()))
             return
         if parsed.path == "/api/settings/git":
             json_response(self, HTTPStatus.OK, SETTINGS.git_settings())
@@ -1457,7 +1473,7 @@ class ManagerHandler(BaseHTTPRequestHandler):
 
     def _browser_host(self) -> str:
         host = self.headers.get("Host", f"localhost:{MANAGER_PORT}")
-        return host.split(":", 1)[0]
+        return host_without_port(host)
 
 
 def main() -> None:
