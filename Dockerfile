@@ -66,3 +66,5 @@ ENV NVM_DIR=/usr/local/nvm
 ENV OPENFRAME_APP_ROOT=/opt/openframe
 ENV OPENFRAME_DATA_ROOT=/data
 ENV PATH=/usr/local/cargo/bin:/usr/share/dotnet:/usr/local/go/bin:/usr/local/bun/bin:${PATH}
+
+ENTRYPOINT ["/bin/sh", "/opt/openframe/docker/entrypoint.sh"]

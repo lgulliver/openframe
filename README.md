@@ -52,6 +52,8 @@ You can also point `REMOTE_IMAGE_NAME` at a local tag before running `docker com
 
 The runtime no longer depends on bind-mounting the source tree into the container. Only state and repos are mounted at runtime.
 
+The image also includes its own default startup command, so appliance-style runtimes such as Unraid do not need a custom command just to launch Openframe.
+
 ## How it works
 
 The top-level container no longer runs one `opencode web` process directly.

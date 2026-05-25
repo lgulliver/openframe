@@ -46,9 +46,6 @@ services:
       GIT_AUTH_USERNAME: ${GIT_AUTH_USERNAME:-}
       GIT_AUTH_PASSWORD: ${GIT_AUTH_PASSWORD:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-    entrypoint:
-      - /bin/sh
-      - /opt/openframe/docker/entrypoint.sh
     ports:
       - "${OPENCODE_PORT:-4096}:${OPENCODE_PORT:-4096}"
       - "${INSTANCE_PORT_START:-4300}-${INSTANCE_PORT_END:-4399}:${INSTANCE_PORT_START:-4300}-${INSTANCE_PORT_END:-4399}"
